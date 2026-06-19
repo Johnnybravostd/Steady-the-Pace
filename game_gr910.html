@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Last Expedition — Grade 9 &amp; 10 (JSS 3/SS 1)</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   RESET & ROOT VARIABLES
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0b0e1a;--ink2:#111627;--ink3:#1a2035;
+  --teal:#00d4b4;--teal2:#00a88e;--teal3:#00fff0;
+  --fog:#7c8db5;--fog2:#a0b0cc;--text:#dce8f5;--muted:#455060;
+  --ok:#22d987;--err:#ff4d6a;--warn:#f59e0b;
+  --gate1:#ff7b2f;--gate2:#3db8ff;--gate3:#b16bff;--gate4:#00d4b4;
+}
+html{height:100%;scroll-behavior:smooth}
+body{
+  background:var(--ink);color:var(--text);
+  font-family:'Syne',sans-serif;
+  min-height:100vh;min-height:100dvh;
+  overflow-x:hidden;
+}
+
+/* Atmospheric fog background */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 15%,rgba(0,212,180,.055) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 85%,rgba(0,212,180,.04) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 50% at 80% 10%,rgba(177,107,255,.035) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 60% at 20% 80%,rgba(61,184,255,.03) 0%,transparent 60%);
+}
+/* Floating fog particles */
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%,rgba(0,212,180,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 10%,rgba(0,212,180,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 55%,rgba(177,107,255,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 35% 75%,rgba(0,212,180,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 70% 30%,rgba(61,184,255,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 90% 80%,rgba(0,212,180,.2) 0%,transparent 100%);
+  animation:fogDrift 18s ease-in-out infinite alternate;
+}
+@keyframes fogDrift{0%{transform:translate(0,0)}100%{transform:translate(6px,-10px)}}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.wrap{
+  max-width:640px;margin:0 auto;
+  padding:0 clamp(.75rem,3vw,1.25rem) 5rem;
+  position:relative;z-index:1;
+}
+
+/* ═══════════════════════════════════════════
+   TOP BAR — sticky score + progress + step tracker
+═══════════════════════════════════════════ */
+.top-bar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(11,14,26,.97);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  padding:10px 0 6px;
+  border-bottom:1px solid rgba(0,212,180,.1);
+}
+.tb-inner{display:flex;align-items:center;gap:10px}
+.game-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(8px,2vw,11px);font-weight:900;
+  color:var(--teal);flex-shrink:0;letter-spacing:2px;
+}
+.prog-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:20px;height:5px;overflow:hidden}
+.prog-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--teal2),var(--teal));
+  border-radius:20px;transition:width .7s cubic-bezier(.4,0,.2,1);
+}
+.score-display{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(12px,3vw,15px);font-weight:700;
+  color:var(--teal);flex-shrink:0;
+  transition:transform .2s;
+}
+.score-display.bump{animation:scoreBump .35s ease}
+@keyframes scoreBump{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+
+/* Attempts counter */
+.attempts-row{
+  display:flex;justify-content:center;align-items:center;
+  gap:8px;margin-top:3px;
+}
+.attempt-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.12);
+  transition:all .3s;
+}
+.attempt-dot.used{background:var(--err);border-color:var(--err);box-shadow:0 0 6px rgba(255,77,106,.4)}
+.attempts-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+.phase-label{
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);text-align:center;margin:3px 0 2px;
+}
+
+/* Step tracker */
+.step-tracker{display:flex;align-items:center;justify-content:center;padding:6px 0 4px}
+.step{display:flex;flex-direction:column;align-items:center;gap:3px}
+.step-circle{
+  width:clamp(26px,7vw,32px);height:clamp(26px,7vw,32px);
+  border-radius:50%;border:2px solid var(--muted);
+  background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .5s cubic-bezier(.4,0,.2,1);
+}
+.step-label{
+  font-size:clamp(6px,1.5vw,8px);letter-spacing:.5px;
+  text-transform:uppercase;color:var(--muted);
+  transition:color .5s;white-space:nowrap;
+}
+.step.done .step-circle{border-color:var(--ok);background:rgba(34,217,135,.12)}
+.step.done .step-circle svg{stroke:var(--ok)}
+.step.done .step-label{color:var(--ok)}
+.step.active .step-circle{
+  border-color:var(--teal);background:rgba(0,212,180,.12);
+  box-shadow:0 0 12px rgba(0,212,180,.35);
+}
+.step.active .step-circle svg{stroke:var(--teal)}
+.step.active .step-label{color:var(--teal)}
+.step-line{
+  width:clamp(10px,3vw,24px);height:2px;
+  background:var(--muted);opacity:.25;
+  margin-bottom:14px;flex-shrink:0;
+  transition:all .5s;
+}
+.step-line.done{background:var(--ok);opacity:.55}
+
+/* ═══════════════════════════════════════════
+   STORY INTRO OVERLAY (doc section 1 + 2)
+═══════════════════════════════════════════ */
+.story-overlay{
+  position:fixed;inset:0;z-index:300;
+  background:var(--ink);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:clamp(1.5rem,5vw,3rem);
+  text-align:center;
+  overflow-y:auto;
+}
+.story-overlay.hidden{display:none}
+.story-logo{
+  width:56px;height:56px;border-radius:50%;
+  background:rgba(0,212,180,.08);
+  border:1.5px solid rgba(0,212,180,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1.2rem;
+  animation:logoPulse 2.5s ease-in-out infinite;
+  box-shadow:0 0 30px rgba(0,212,180,.15);
+}
+@keyframes logoPulse{0%,100%{box-shadow:0 0 20px rgba(0,212,180,.15)}50%{box-shadow:0 0 40px rgba(0,212,180,.35)}}
+.story-week{
+  font-size:9px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--teal2);margin-bottom:.5rem;
+}
+.story-main-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(22px,7vw,38px);font-weight:900;
+  color:var(--text);margin-bottom:.2rem;line-height:1.1;
+}
+.story-main-title span{
+  color:var(--teal);
+  text-shadow:0 0 30px rgba(0,212,180,.4);
+}
+.story-tagline{
+  font-size:clamp(9px,2.2vw,11px);letter-spacing:4px;
+  text-transform:uppercase;color:var(--fog);
+  margin-bottom:1.4rem;
+}
+/* Week continuity line from doc section 2 */
+.story-continuity{
+  display:inline-block;
+  background:rgba(0,212,180,.05);
+  border:1px solid rgba(0,212,180,.15);
+  border-left:3px solid var(--teal2);
+  border-radius:6px;
+  padding:8px 14px;
+  font-size:clamp(11px,2.8vw,12.5px);
+  color:var(--fog2);font-style:italic;
+  margin-bottom:1.4rem;
+  max-width:420px;line-height:1.6;
+}
+/* Narrative block — full story from doc section 1 */
+.story-narrative{
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:clamp(14px,4vw,22px);
+  max-width:440px;
+  text-align:left;
+  margin-bottom:1.4rem;
+}
+.story-year{
+  font-family:'Orbitron',monospace;
+  font-size:11px;letter-spacing:3px;color:var(--teal);
+  margin-bottom:.8rem;text-transform:uppercase;
+}
+.story-text{
+  font-size:clamp(12px,3vw,13.5px);
+  color:var(--fog2);line-height:1.8;
+}
+.story-text p{margin-bottom:.7rem}
+.story-text p:last-child{margin-bottom:0;color:var(--teal);font-style:italic;font-weight:600}
+/* Grade badge */
+.story-grade-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,212,180,.08);
+  border:1px solid rgba(0,212,180,.2);
+  border-radius:100px;padding:6px 18px;
+  font-size:11px;font-weight:700;
+  color:var(--teal);letter-spacing:1px;
+  margin-bottom:1.2rem;
+}
+.story-grade-badge-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 6px var(--teal);
+  animation:dotPulse 1.8s ease-in-out infinite;
+}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+/* Start button */
+.story-start-btn{
+  background:linear-gradient(135deg,var(--teal2),var(--teal));
+  color:#050c14;border:none;border-radius:14px;
+  padding:clamp(14px,3vw,17px) clamp(28px,6vw,44px);
+  font-family:'Orbitron',monospace;
+  font-size:clamp(11px,2.8vw,13px);font-weight:900;
+  letter-spacing:2px;cursor:pointer;
+  box-shadow:0 6px 28px rgba(0,212,180,.35);
+  transition:all .2s;
+  position:relative;overflow:hidden;
+  margin-bottom:.8rem;
+}
+.story-start-btn::after{
+  content:'';position:absolute;
+  top:-50%;left:-60%;width:40%;height:200%;
+  background:rgba(255,255,255,.15);
+  transform:skewX(-20deg);
+  animation:btnShine 3s ease-in-out infinite;
+}
+@keyframes btnShine{0%,100%{left:-60%}50%{left:130%}}
+.story-start-btn:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,212,180,.5)}
+/* Skip text under button */
+.story-skip-hint{font-size:11px;color:var(--muted)}
+.story-skip-link{
+  color:var(--teal2);cursor:pointer;text-decoration:underline;
+  font-size:11px;
+}
+/* Skip countdown badge */
+.skip-countdown{
+  display:none;
+  font-family:'Orbitron',monospace;
+  font-size:10px;color:var(--muted);
+  margin-top:.5rem;letter-spacing:1px;
+}
+.skip-countdown.show{display:block}
+
+/* ═══════════════════════════════════════════
+   SECTION / FADE ANIMATIONS
+═══════════════════════════════════════════ */
+.section{display:none}
+.section.active{display:block;animation:fadeUp .45s cubic-bezier(.4,0,.2,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Gate unlock transition flash */
+.gate-flash{
+  position:fixed;inset:0;z-index:150;
+  pointer-events:none;opacity:0;
+}
+.gate-flash.fire{background:radial-gradient(circle at center,rgba(255,123,47,.18),transparent 70%)}
+.gate-flash.flash{animation:gateFlash .6s ease}
+@keyframes gateFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+
+/* ═══════════════════════════════════════════
+   CROSSWORD SECTION
+═══════════════════════════════════════════ */
+.cw-header{text-align:center;padding:1.3rem 0 .8rem}
+.cw-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(17px,5vw,24px);font-weight:900;
+  color:var(--teal);margin-bottom:.3rem;
+}
+.cw-sub{
+  font-size:clamp(12px,3vw,13px);
+  color:var(--fog2);line-height:1.65;margin-bottom:.8rem;
+}
+.cw-sub strong{color:var(--teal)}
+.cw-bonus-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,212,180,.06);
+  border:1px solid rgba(0,212,180,.16);
+  border-radius:100px;padding:5px 14px;
+  font-size:11px;color:var(--teal);margin-bottom:1rem;
+}
+.cw-timer-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cw-timer-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:20px;height:7px;overflow:hidden}
+.cw-timer-bar{
+  height:100%;
+  background:linear-gradient(90deg,var(--teal2),var(--ok));
+  border-radius:20px;transition:width .1s linear,background .5s;
+}
+.cw-timer-val{
+  font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+  color:var(--ok);white-space:nowrap;min-width:38px;text-align:right;
+  transition:color .3s;
+}
+.cw-timer-val.warn{color:var(--err);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.words-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
+.word-chip{
+  background:var(--ink3);border:2px solid rgba(255,255,255,.08);
+  border-radius:8px;padding:5px 14px;
+  font-size:13px;color:var(--fog);font-weight:700;letter-spacing:1px;
+  transition:all .35s;
+}
+.word-chip.found{
+  border-color:var(--ok);background:rgba(34,217,135,.1);
+  color:var(--ok);text-decoration:line-through;
+}
+.grid-wrap{overflow-x:auto;padding:4px;text-align:center}
+.cw-grid{display:inline-grid;gap:4px;cursor:pointer;user-select:none;touch-action:none}
+.cell{
+  width:clamp(48px,13vw,62px);height:clamp(48px,13vw,62px);
+  background:var(--ink3);border:2px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;
+  font-size:clamp(15px,4vw,20px);font-weight:700;
+  color:var(--text);transition:all .18s;text-transform:uppercase;
+}
+.cell.selected{border-color:var(--teal);background:rgba(0,212,180,.14);color:var(--teal)}
+.cell.found{border-color:var(--ok);background:rgba(34,217,135,.14);color:var(--ok)}
+.cw-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
+.skip-btn{
+  display:none;margin:14px auto 0;
+  background:rgba(255,77,106,.08);color:#ff8099;
+  border:1.5px solid rgba(255,77,106,.25);
+  border-radius:8px;padding:9px 22px;
+  font-size:12px;cursor:pointer;
+  font-family:'Syne',sans-serif;transition:all .2s;
+}
+.skip-btn:hover{background:rgba(255,77,106,.18)}
+
+/* ═══════════════════════════════════════════
+   GATE COMMON STYLES
+═══════════════════════════════════════════ */
+.gate-header{text-align:center;padding:1.2rem 0 .6rem}
+.gate-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  border-radius:100px;padding:5px 16px;
+  font-family:'Orbitron',monospace;
+  font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:.6rem;border:1.5px solid;
+}
+.gate-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(18px,5.5vw,28px);font-weight:900;
+  margin-bottom:.3rem;line-height:1.1;
+}
+.gate-story{
+  font-size:clamp(11px,2.8vw,12.5px);color:var(--fog);
+  font-style:italic;max-width:400px;margin:0 auto .9rem;line-height:1.65;
+}
+/* Timer bar */
+.g-timer-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.g-timer-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:20px;height:7px;overflow:hidden}
+.g-timer-bar{height:100%;border-radius:20px;transition:width .1s linear}
+.g1c{background:linear-gradient(90deg,#c24a00,var(--gate1))}
+.g2c{background:linear-gradient(90deg,#0369a1,var(--gate2))}
+.g3c{background:linear-gradient(90deg,#7e22ce,var(--gate3))}
+.g4c{background:linear-gradient(90deg,var(--teal2),var(--gate4))}
+.g-timer-val{
+  font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+  min-width:38px;text-align:right;transition:color .3s;
+}
+.g-timer-val.warn{color:var(--err)!important;animation:blink 1s infinite}
+/* Task card */
+.task-card{
+  background:var(--ink2);border:1.5px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:clamp(14px,3.5vw,22px);
+  margin-bottom:14px;position:relative;overflow:hidden;
+}
+.task-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.tc-g1::before{background:linear-gradient(90deg,transparent,var(--gate1),transparent)}
+.tc-g2::before{background:linear-gradient(90deg,transparent,var(--gate2),transparent)}
+.tc-g3::before{background:linear-gradient(90deg,transparent,var(--gate3),transparent)}
+.tc-g4::before{background:linear-gradient(90deg,transparent,var(--gate4),transparent)}
+.task-instr{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fog);margin-bottom:.5rem}
+.task-q{font-size:clamp(14px,3.8vw,18px);line-height:1.6;color:var(--text);font-weight:500;text-align:center}
+/* Submit button */
+.btn{
+  background:linear-gradient(135deg,var(--teal2),var(--teal));
+  color:#050c14;border:none;border-radius:11px;
+  padding:clamp(11px,2.8vw,15px) clamp(18px,4vw,28px);
+  font-family:'Orbitron',monospace;
+  font-size:clamp(10px,2.5vw,12px);font-weight:900;letter-spacing:1.5px;
+  cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:7px;
+  box-shadow:0 3px 16px rgba(0,212,180,.28);
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,212,180,.42)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-full{width:100%;justify-content:center;margin-top:10px}
+/* Feedback */
+.fb{border-radius:13px;padding:14px 16px;text-align:center;margin-top:12px;display:none;animation:fadeUp .3s}
+.fb.show{display:block}
+.fb.ok{background:rgba(34,217,135,.08);border:1px solid rgba(34,217,135,.25);color:var(--ok)}
+.fb.err{background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.25);color:#ff8099}
+.fb-t{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;margin-bottom:4px}
+.fb-s{font-size:12px;opacity:.85;line-height:1.5}
+
+/* ═══════════════════════════════════════════
+   GATE 1 — PUZZLE TILES
+═══════════════════════════════════════════ */
+.tile-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:1rem 0}
+.tile{
+  background:var(--ink3);border:2px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:clamp(8px,2vw,12px);
+  cursor:pointer;transition:all .2s;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  min-width:clamp(140px,80vw,320px);text-align:left;max-width:100%;
+}
+.tile svg{display:block;flex-shrink:0}
+.tile-lbl{font-size:clamp(10px,2.5vw,12px);color:var(--fog2);line-height:1.3;font-weight:600}
+.tile:hover{border-color:var(--gate1);background:rgba(255,123,47,.07)}
+.tile:hover .tile-lbl{color:var(--gate1)}
+.tile.picked{
+  border-color:var(--gate1);background:rgba(255,123,47,.14);
+  box-shadow:0 0 16px rgba(255,123,47,.22);
+}
+.tile.picked .tile-lbl{color:var(--gate1)}
+.tile.placed{
+  border-color:var(--ok);background:rgba(34,217,135,.07);
+  opacity:.5;cursor:default;
+}
+.tile.placed .tile-lbl{color:var(--ok)}
+.slot-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:1rem 0}
+.slot-wrap{text-align:center}
+.slot{
+  min-width:clamp(80px,22vw,104px);min-height:clamp(86px,22vw,110px);
+  border:2px dashed rgba(255,255,255,.14);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);transition:all .22s;padding:6px;cursor:pointer;
+}
+.slot.filled{border-style:solid;border-color:var(--ok);background:rgba(34,217,135,.06)}
+.slot:hover{border-color:var(--teal)}
+.slot-lbl{font-size:9px;color:var(--muted);margin-top:4px;font-family:'Orbitron',monospace;letter-spacing:1px}
+
+/* ═══════════════════════════════════════════
+   GATE 2 — REASONING CHOICES
+═══════════════════════════════════════════ */
+.choice-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:1rem 0}
+.choice-btn{
+  background:var(--ink3);border:2px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:clamp(12px,3vw,16px) 12px;
+  font-size:clamp(13px,3.2vw,15px);color:var(--text);
+  cursor:pointer;transition:all .2s;text-align:left;
+  font-weight:500;font-family:'Syne',sans-serif;line-height:1.5;
+}
+.choice-btn:hover{border-color:var(--gate2);background:rgba(61,184,255,.08)}
+.choice-btn.sel{border-color:var(--gate2);background:rgba(61,184,255,.14);color:var(--gate2)}
+
+/* ═══════════════════════════════════════════
+   GATE 3 — MEMORY
+═══════════════════════════════════════════ */
+.mem-display{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:1rem 0}
+.mem-item{
+  background:rgba(177,107,255,.12);
+  border:2px solid rgba(177,107,255,.35);
+  border-radius:12px;
+  padding:clamp(12px,3vw,18px) clamp(20px,5vw,28px);
+  font-size:clamp(18px,5vw,26px);color:var(--text);font-weight:700;
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.75)}to{opacity:1;transform:scale(1)}}
+.mem-countdown{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(44px,14vw,70px);font-weight:900;
+  color:var(--gate3);text-align:center;padding:.8rem 0;
+  text-shadow:0 0 40px rgba(177,107,255,.5);
+  transition:all .3s;
+}
+.mem-countdown.pulse{animation:cdPulse .4s ease}
+@keyframes cdPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.mem-cover{
+  text-align:center;padding:1.8rem 1rem;
+  font-size:clamp(13px,3.5vw,16px);
+  color:var(--fog);line-height:1.7;
+}
+.mem-cover strong{color:var(--gate3)}
+.mem-opts{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:1rem 0}
+.mem-opt{
+  background:var(--ink3);border:2px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  padding:clamp(13px,3.2vw,17px) clamp(20px,5vw,26px);
+  font-size:clamp(15px,4vw,19px);color:var(--text);
+  cursor:pointer;transition:all .2s;font-weight:700;
+  font-family:'Syne',sans-serif;
+}
+.mem-opt:hover{border-color:var(--gate3);background:rgba(177,107,255,.1)}
+.mem-opt.sel{border-color:var(--gate3);background:rgba(177,107,255,.15);color:var(--gate3)}
+
+/* ═══════════════════════════════════════════
+   GATE 4 — WORD CHALLENGE
+═══════════════════════════════════════════ */
+.scramble{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(34px,11vw,56px);font-weight:900;
+  color:var(--gate4);text-align:center;
+  letter-spacing:clamp(6px,2vw,10px);margin:1rem 0;
+  text-shadow:0 0 28px rgba(0,212,180,.35);
+  animation:scrambleIn .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes scrambleIn{from{opacity:0;letter-spacing:20px}to{opacity:1}}
+.ans-input{
+  width:100%;
+  background:rgba(0,212,180,.04);
+  border:2px solid rgba(0,212,180,.15);
+  border-radius:12px;
+  padding:clamp(13px,3vw,16px) 16px;
+  color:var(--text);
+  font-family:'Orbitron',monospace;
+  font-size:clamp(18px,5vw,24px);
+  outline:none;transition:all .22s;
+  text-align:center;letter-spacing:4px;
+  caret-color:var(--teal);
+  -webkit-appearance:none;
+  text-transform:uppercase;
+}
+.ans-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,212,180,.1)}
+.ans-input.ok{border-color:var(--ok);background:rgba(34,217,135,.06)}
+.ans-input.er{border-color:var(--err);background:rgba(255,77,106,.06);animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+/* ═══════════════════════════════════════════
+   WRONG ANSWER OVERLAY — fog sweeps in
+═══════════════════════════════════════════ */
+.wrong-ov{
+  position:fixed;inset:0;z-index:250;
+  background:rgba(11,14,26,.95);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:2rem;
+}
+.wrong-ov.show{display:flex;animation:fogSweep .5s ease}
+@keyframes fogSweep{
+  0%{opacity:0;transform:scale(1.06)}
+  100%{opacity:1;transform:scale(1)}
+}
+/* Animated fog SVG behind wrong panel */
+.wrong-fog{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.18;
+}
+.wrong-fog circle{animation:fogFloat 4s ease-in-out infinite alternate}
+.wrong-panel{
+  position:relative;z-index:1;
+  max-width:360px;
+}
+.wrong-icon-ring{
+  width:68px;height:68px;border-radius:50%;
+  background:rgba(255,77,106,.1);
+  border:2px solid rgba(255,77,106,.35);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1rem;
+  animation:wrongPulse 1.5s ease-in-out infinite;
+}
+@keyframes wrongPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,106,.3)}50%{box-shadow:0 0 0 12px rgba(255,77,106,0)}}
+.wrong-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(17px,5vw,24px);font-weight:900;
+  color:var(--err);margin-bottom:.6rem;
+}
+.wrong-msg{
+  font-size:clamp(13px,3vw,15px);
+  color:var(--fog2);line-height:1.7;
+  margin-bottom:.5rem;max-width:320px;
+}
+.wrong-cost{
+  display:inline-block;
+  font-family:'Orbitron',monospace;font-size:12px;
+  color:var(--err);
+  background:rgba(255,77,106,.08);
+  border:1px solid rgba(255,77,106,.2);
+  border-radius:100px;padding:4px 14px;
+  margin-bottom:.5rem;
+}
+.wrong-next{font-size:12px;color:var(--muted)}
+
+/* ═══════════════════════════════════════════
+   RESULT SECTION — dramatic leaderboard reveal
+═══════════════════════════════════════════ */
+.result-wrap{padding:1.4rem 0}
+.result-hero{text-align:center;margin-bottom:1.4rem}
+.result-archive-icon{
+  width:60px;height:60px;border-radius:50%;
+  background:rgba(0,212,180,.08);
+  border:1.5px solid rgba(0,212,180,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto .8rem;
+  box-shadow:0 0 40px rgba(0,212,180,.2);
+}
+.result-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(20px,6vw,30px);font-weight:900;
+  color:var(--teal);margin-bottom:.3rem;
+  text-shadow:0 0 40px rgba(0,212,180,.3);
+}
+.result-sub{font-size:13px;color:var(--fog);margin-bottom:1.4rem}
+/* Score dramatic reveal */
+.score-reveal{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(40px,14vw,72px);font-weight:900;
+  color:var(--teal);text-align:center;
+  margin:.8rem 0;line-height:1;
+  text-shadow:0 0 60px rgba(0,212,180,.4);
+  opacity:0;transform:scale(.7);
+  transition:all .8s cubic-bezier(.34,1.56,.64,1);
+}
+.score-reveal.show{opacity:1;transform:scale(1)}
+.score-reveal-label{
+  font-size:11px;color:var(--fog);text-align:center;
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:1.2rem;
+}
+/* Leaderboard entry */
+.lb-entry{
+  background:var(--ink2);border:1px solid rgba(255,255,255,.07);
+  border-radius:14px;padding:14px 16px;margin-bottom:8px;
+  display:flex;align-items:center;gap:12px;
+  opacity:0;transform:translateY(24px);
+  transition:all .6s cubic-bezier(.4,0,.2,1);
+}
+.lb-entry.show{opacity:1;transform:translateY(0)}
+.lb-entry.rank1{border-color:rgba(0,212,180,.3);background:rgba(0,212,180,.05)}
+.lb-rank{
+  font-family:'Orbitron',monospace;font-size:20px;font-weight:900;
+  color:var(--muted);width:34px;text-align:center;flex-shrink:0;
+}
+.lb-entry.rank1 .lb-rank{color:var(--teal)}
+.lb-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.2}
+.lb-meta{font-size:11px;color:var(--fog);margin-top:2px}
+.lb-score{
+  font-family:'Orbitron',monospace;
+  font-size:20px;font-weight:700;color:var(--teal);flex-shrink:0;
+}
+/* Result card (printable) */
+.result-card{
+  background:linear-gradient(135deg,var(--ink2),#0c1222);
+  border:2px solid rgba(0,212,180,.35);
+  border-radius:18px;
+  padding:clamp(18px,4vw,28px);
+  margin-top:1.4rem;
+  box-shadow:0 0 70px rgba(0,212,180,.1),0 20px 60px rgba(0,0,0,.5);
+  opacity:0;transform:translateY(20px);
+  transition:all .7s .4s cubic-bezier(.4,0,.2,1);
+}
+.result-card.show{opacity:1;transform:translateY(0)}
+.rc-eyebrow{
+  font-family:'Orbitron',monospace;font-size:9px;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--teal2);margin-bottom:10px;
+}
+.rc-name{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(18px,5.5vw,26px);font-weight:900;
+  color:var(--text);margin-bottom:5px;
+}
+.rc-band{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,212,180,.08);border:1px solid rgba(0,212,180,.22);
+  border-radius:100px;padding:3px 14px;
+  font-size:10px;font-weight:700;color:var(--teal);
+  letter-spacing:1px;margin-bottom:12px;
+}
+.rc-band-dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.rc-score-big{
+  display:inline-block;
+  font-family:'Orbitron',monospace;
+  font-size:clamp(28px,8vw,42px);font-weight:900;
+  color:var(--teal);margin-bottom:12px;
+  text-shadow:0 0 30px rgba(0,212,180,.3);
+}
+.rc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.rc-stat{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;padding:10px 12px;
+}
+.rc-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.rc-val{font-family:'Orbitron',monospace;font-size:clamp(13px,3.5vw,16px);font-weight:700;color:var(--teal)}
+.rc-footer{
+  font-size:11px;color:var(--muted);
+  border-top:1px solid rgba(255,255,255,.05);
+  padding-top:10px;margin-bottom:14px;line-height:1.7;
+}
+.print-btn{
+  background:linear-gradient(135deg,var(--teal2),var(--teal));
+  color:#050c14;border:none;border-radius:11px;
+  padding:13px 20px;
+  font-family:'Orbitron',monospace;
+  font-size:11px;font-weight:900;letter-spacing:1px;
+  cursor:pointer;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(0,212,180,.28);
+  transition:all .2s;
+}
+.print-btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,212,180,.45)}
+.screenshot-note{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6}
+
+/* ═══════════════════════════════════════════
+   CONFETTI
+═══════════════════════════════════════════ */
+.confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.cp{position:absolute;top:-12px;animation:cFall linear forwards}
+@keyframes cFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:380px){
+  .choice-grid{grid-template-columns:1fr}
+  .step-line{width:8px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+@media print{
+  body *{visibility:hidden}
+  .result-card,.result-card *{visibility:visible}
+  .result-card{
+    position:fixed;inset:0;margin:auto;
+    border:2px solid #000;background:#fff;color:#000;
+    box-shadow:none;opacity:1;transform:none;
+  }
+  .print-btn{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     STORY INTRO OVERLAY (doc sections 1 & 2)
+     Shows once on game start, skippable after 5s
+════════════════════════════════════════ -->
+<div class="story-overlay" id="storyOverlay">
+  <div class="story-logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="22" x2="21" y2="22"/>
+      <line x1="6" y1="18" x2="6" y2="11"/>
+      <line x1="10" y1="18" x2="10" y2="11"/>
+      <line x1="14" y1="18" x2="14" y2="11"/>
+      <line x1="18" y1="18" x2="18" y2="11"/>
+      <polygon points="12 2 20 7 4 7 12 2"/>
+    </svg>
+  </div>
+
+  <div class="story-week">Decipher Academy — Week 2 Skill Challenge</div>
+  <div class="story-main-title">THE LAST<br><span>EXPEDITION</span></div>
+  <div class="story-tagline">Steady the Pace</div>
+
+  <!-- Week 1 continuity line — doc section 2 -->
+  <div class="story-continuity">
+    "Last week, you found what you're made of.<br>This week, you'll need every bit of it."
+  </div>
+
+  <!-- Grade band watermark -->
+  <div class="story-grade-badge">
+    <div class="story-grade-badge-dot"></div>
+    Grade 9 &amp; 10 — Band 5
+  </div>
+
+  <!-- Full narrative — exact from doc section 1 -->
+  <div class="story-narrative">
+    <div class="story-year">The Year Is 2047</div>
+    <div class="story-text">
+      <p>The world's most important library — <strong style="color:var(--text)">The Archive of Everything</strong> — has been swallowed by a mysterious fog. Every book, every formula, every map, every story ever written is locked inside.</p>
+      <p>A team of young explorers has been chosen. Not for their speed. Not for their strength. But for their minds.</p>
+      <p>You are one of them.</p>
+      <p>The fog has four gates. Each gate is sealed by a different kind of challenge — a puzzle, a question of reason, a test of memory, a word only the wise can unlock.</p>
+      <p>But here is what the fog does: it feeds on mistakes. Every wrong answer pushes you deeper into it. Every hasty guess costs you ground.</p>
+      <p>"Move too fast and the fog wins. Steady the pace — and the Archive is yours."</p>
+    </div>
+  </div>
+
+  <button class="story-start-btn" id="storyStartBtn" onclick="startGame()">
+    ENTER THE FOG
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-left:4px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </button>
+  <div class="skip-countdown" id="skipCountdown">Returning players can skip in <span id="skipSecs">5</span>s</div>
+  <div class="story-skip-hint">
+    <span class="story-skip-link" id="skipLink" style="display:none" onclick="startGame()">Skip story →</span>
+  </div>
+</div>
+
+<!-- Gate unlock flash layer -->
+<div class="gate-flash" id="gateFlash"></div>
+
+<!-- Confetti layer -->
+<div class="confetti-layer" id="confettiLayer"></div>
+
+<div class="wrap">
+
+<!-- ════════════════════════════════════════
+     TOP BAR
+════════════════════════════════════════ -->
+<div class="top-bar">
+  <div class="tb-inner">
+    <div class="game-title">The Last Expedition</div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <div class="score-display" id="scoreDisplay">10 pts</div>
+  </div>
+  <div class="phase-label" id="phaseLabel">Grade 9 &amp; 10 — Steady the Pace</div>
+  <!-- Attempts tracker -->
+  <div class="attempts-row">
+    <span class="attempts-label">Attempts:</span>
+    <div class="attempt-dot" id="ad1"></div>
+    <div class="attempt-dot" id="ad2"></div>
+    <div class="attempt-dot" id="ad3"></div>
+    <div class="attempt-dot" id="ad4"></div>
+    <div class="attempt-dot" id="ad5"></div>
+  </div>
+  <!-- Step tracker: Round 0 → G1 → G2 → G3 → G4 -->
+  <div class="step-tracker">
+    <div class="step active" id="stp0">
+      <div class="step-circle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </div>
+      <div class="step-label">Round 0</div>
+    </div>
+    <div class="step-line" id="ln01"></div>
+    <div class="step" id="stp1">
+      <div class="step-circle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+      </div>
+      <div class="step-label">Gate 1</div>
+    </div>
+    <div class="step-line" id="ln12"></div>
+    <div class="step" id="stp2">
+      <div class="step-circle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 5 11.9V16a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-2.1A7 7 0 0 1 12 2z"/></svg>
+      </div>
+      <div class="step-label">Gate 2</div>
+    </div>
+    <div class="step-line" id="ln23"></div>
+    <div class="step" id="stp3">
+      <div class="step-circle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      </div>
+      <div class="step-label">Gate 3</div>
+    </div>
+    <div class="step-line" id="ln34"></div>
+    <div class="step" id="stp4">
+      <div class="step-circle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <div class="step-label">Gate 4</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 0 — CROSSWORD (Round 0)
+     9×9 | 8 words | 130s | Skip −4 | Done +2
+════════════════════════════════════════ -->
+<div class="section active" id="sec0">
+  <div class="cw-header">
+    <div class="cw-title">The First Gate</div>
+    <div class="cw-sub">Find all <strong>8 hidden words</strong> in the grid to unlock the expedition.<br>Hold and drag to select — words go across or down.</div>
+    <div class="cw-bonus-pill">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/></svg>
+      Find all 8 words → +2 bonus points
+    </div>
+  </div>
+  <div class="cw-timer-row">
+    <div class="cw-timer-wrap"><div class="cw-timer-bar" id="cwBar" style="width:100%"></div></div>
+    <div class="cw-timer-val" id="cwTime">2:10</div>
+  </div>
+  <div class="words-row" id="wordChips"></div>
+  <div class="grid-wrap">
+    <div class="cw-grid" id="cwGrid" style="grid-template-columns:repeat(9,1fr)"></div>
+  </div>
+  <div class="cw-hint">If time runs out a Skip button will appear (−4 pts)</div>
+  <button class="skip-btn" id="skipBtn" onclick="skipCrossword()">Skip Crossword (−4 pts)</button>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 1 — GATE 1: PUZZLE
+     Order stages of mitosis: Prophase→Metaphase→Anaphase→Telophase | 45s
+════════════════════════════════════════ -->
+<div class="section" id="sec1">
+  <div class="gate-header">
+    <div class="gate-badge" style="border-color:var(--gate1);color:var(--gate1);background:rgba(255,123,47,.08)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Gate 1 — Puzzle
+    </div>
+    <div class="gate-title" style="color:var(--gate1)">The First Lock</div>
+    <div class="gate-story">"The first lock on the fog gate — reconstruct the argument in logical order."</div>
+  </div>
+  <div class="g-timer-row">
+    <div class="g-timer-wrap"><div class="g-timer-bar g1c" id="g1Bar" style="width:100%"></div></div>
+    <div class="g-timer-val" id="g1Val" style="color:var(--gate1)">0:50</div>
+  </div>
+  <div class="task-card tc-g1">
+    <div class="task-instr">Reconstruct the paragraph in correct logical order</div>
+    <div class="task-q" style="font-size:clamp(13px,3.2vw,15px)">Topic: <strong style="color:var(--gate1)">Causes of World War I</strong><br><small style="color:var(--fog);font-style:italic">Tap a sentence card, then tap a slot to place it</small></div>
+  </div>
+  <div class="tile-grid" id="g1Tiles"></div>
+  <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:5px">Correct order →</div>
+  <div class="slot-row" id="g1Slots"></div>
+  <button class="btn btn-full" id="g1Btn" onclick="checkGate1()" disabled>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    Confirm Order
+  </button>
+  <div class="fb" id="fb1"><div class="fb-t" id="fb1T"></div><div class="fb-s" id="fb1S"></div></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 2 — GATE 2: REASONING
+     Cross-subject analytical question
+     Photosynthesis + no sunlight | 45s
+════════════════════════════════════════ -->
+<div class="section" id="sec2">
+  <div class="gate-header">
+    <div class="gate-badge" style="border-color:var(--gate2);color:var(--gate2);background:rgba(61,184,255,.08)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 5 11.9V16a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-2.1A7 7 0 0 1 12 2z"/></svg>
+      Gate 2 — Reasoning
+    </div>
+    <div class="gate-title" style="color:var(--gate2)">The Fog Thickens</div>
+    <div class="gate-story">"Only reasoning cuts through — think carefully before you answer."</div>
+  </div>
+  <div class="g-timer-row">
+    <div class="g-timer-wrap"><div class="g-timer-bar g2c" id="g2Bar" style="width:100%"></div></div>
+    <div class="g-timer-val" id="g2Val" style="color:var(--gate2)">0:50</div>
+  </div>
+  <div class="task-card tc-g2">
+    <div class="task-instr">Multi-step problem solving</div>
+    <div class="task-q" style="font-size:clamp(13px,3.2vw,16px);line-height:1.8">A car travels <strong style="color:var(--gate2)">90 km</strong> in <strong style="color:var(--gate2)">1.5 hours</strong>. What is its speed?<br>If it then slows by <strong style="color:var(--gate2)">20%</strong>, what is the new speed?</div>
+  </div>
+  <div class="choice-grid" id="g2Choices"></div>
+  <button class="btn btn-full" id="g2Btn" onclick="checkGate2()" disabled>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    Confirm Answer
+  </button>
+  <div class="fb" id="fb2"><div class="fb-t" id="fb2T"></div><div class="fb-s" id="fb2S"></div></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 3 — GATE 3: MEMORY
+     6 W. African capitals shown 10s → recall any 5 | 45s
+════════════════════════════════════════ -->
+<div class="section" id="sec3">
+  <div class="gate-header">
+    <div class="gate-badge" style="border-color:var(--gate3);color:var(--gate3);background:rgba(177,107,255,.08)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      Gate 3 — Memory
+    </div>
+    <div class="gate-title" style="color:var(--gate3)">The Fog Erases</div>
+    <div class="gate-story">"The fog erases what you don't hold tightly — memorise all 8 elements before they disappear."</div>
+  </div>
+  <!-- Phase A: show all 8 items with visible 12s countdown -->
+  <div id="g3Show">
+    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fog);text-align:center;margin-bottom:.6rem">Memorise all 8 periodic table elements!</div>
+    <div class="mem-display" id="g3Items"></div>
+    <div class="mem-countdown" id="g3Count">12</div>
+  </div>
+  <!-- Phase B: items hidden, recall the missing one -->
+  <div id="g3Recall" style="display:none">
+    <div class="mem-cover">
+      Items are hidden! <strong>Select any 6 of the 8 elements you saw.</strong><br>
+      <span style="font-size:13px;color:var(--fog)">Tick 6 correct periodic table elements</span>
+    </div>
+    <div class="g-timer-row">
+      <div class="g-timer-wrap"><div class="g-timer-bar g3c" id="g3Bar" style="width:100%"></div></div>
+      <div class="g-timer-val" id="g3Val" style="color:var(--gate3)">0:50</div>
+    </div>
+    <div class="mem-opts" id="g3Opts"></div>
+    <button class="btn btn-full" id="g3Btn" onclick="checkGate3()" disabled>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Confirm Answer
+    </button>
+  </div>
+  <div class="fb" id="fb3"><div class="fb-t" id="fb3T"></div><div class="fb-s" id="fb3S"></div></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 4 — GATE 4: WORD CHALLENGE
+     Identify literary device: Her voice was as sweet as honey → Simile | 45s
+════════════════════════════════════════ -->
+<div class="section" id="sec4">
+  <div class="gate-header">
+    <div class="gate-badge" style="border-color:var(--gate4);color:var(--gate4);background:rgba(0,212,180,.08)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Gate 4 — Word Challenge
+    </div>
+    <div class="gate-title" style="color:var(--gate4)">The Final Seal</div>
+    <div class="gate-story">"Only the right word opens the last gate to The Archive."</div>
+  </div>
+  <div class="g-timer-row">
+    <div class="g-timer-wrap"><div class="g-timer-bar g4c" id="g4Bar" style="width:100%"></div></div>
+    <div class="g-timer-val" id="g4Val" style="color:var(--gate4)">0:50</div>
+  </div>
+  <div class="task-card tc-g4">
+    <div class="task-instr">Use this word correctly in a sentence (under 15 words)</div>
+    <div style="text-align:center;margin:.6rem 0">
+      <span style="font-family:'Orbitron',monospace;font-size:clamp(16px,4.5vw,22px);font-weight:900;color:var(--gate4);letter-spacing:2px">ELECTROLYSIS</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--fog);text-align:center;font-style:italic;line-height:1.6;padding:0 .5rem">
+      The process of using electricity to split a substance into its chemical components.
+    </div>
+  </div>
+  <textarea id="g4Input" rows="3"
+    placeholder="Write a sentence using ELECTROLYSIS here (max 15 words)..."
+    autocomplete="off" spellcheck="false"
+    style="width:100%;background:rgba(0,212,180,.04);border:2px solid rgba(0,212,180,.15);border-radius:12px;padding:13px 16px;color:var(--text);font-family:'Syne',sans-serif;font-size:clamp(14px,3.5vw,16px);outline:none;resize:none;caret-color:var(--teal);line-height:1.6;margin-top:10px;-webkit-appearance:none"
+    oninput="g4WordCheck(this)"></textarea>
+  <div id="g4WordCount" style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px;margin-bottom:2px">0 / 15 words</div>
+  <button class="btn btn-full" id="g4Btn" onclick="checkGate4()" disabled>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    Submit Sentence
+  </button>
+  <div class="fb" id="fb4"><div class="fb-t" id="fb4T"></div><div class="fb-s" id="fb4S"></div></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 5 — RESULT (dramatic reveal)
+════════════════════════════════════════ -->
+<div class="section" id="sec5">
+  <div class="result-wrap">
+    <div class="result-hero">
+      <div class="result-archive-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-linecap="round">
+          <line x1="3" y1="22" x2="21" y2="22"/>
+          <line x1="6" y1="18" x2="6" y2="11"/>
+          <line x1="10" y1="18" x2="10" y2="11"/>
+          <line x1="14" y1="18" x2="14" y2="11"/>
+          <line x1="18" y1="18" x2="18" y2="11"/>
+          <polygon points="12 2 20 7 4 7 12 2"/>
+        </svg>
+      </div>
+      <div class="result-title">The Archive Opens!</div>
+      <div class="result-sub">You have reached The Archive of Everything</div>
+    </div>
+    <!-- Dramatic score reveal -->
+    <div class="score-reveal" id="scoreReveal">—</div>
+    <div class="score-reveal-label">Final Score</div>
+    <!-- Leaderboard entry (reveals with delay) -->
+    <div id="lbEntries"></div>
+    <!-- Printable result card -->
+    <div class="result-card" id="resultCard">
+      <div class="rc-eyebrow">Decipher Academy · The Last Expedition · Week 2</div>
+      <div class="rc-name" id="rcName">—</div>
+      <div class="rc-band">
+        <div class="rc-band-dot"></div>
+        Grade 9 &amp; 10 — Band 5
+      </div><br>
+      <div class="rc-score-big" id="rcScoreBig">—</div>
+      <div class="rc-stats">
+        <div class="rc-stat"><div class="rc-lbl">Final Score</div><div class="rc-val" id="rcScore">—</div></div>
+        <div class="rc-stat"><div class="rc-lbl">Gates Cleared</div><div class="rc-val" id="rcGates">—</div></div>
+        <div class="rc-stat"><div class="rc-lbl">Time Taken</div><div class="rc-val" id="rcTime">—</div></div>
+        <div class="rc-stat"><div class="rc-lbl">Wrong Attempts</div><div class="rc-val" id="rcAttempts">—</div></div>
+        <div class="rc-stat" style="grid-column:1/-1"><div class="rc-lbl">Date</div><div class="rc-val" id="rcDate">—</div></div>
+      </div>
+      <div class="rc-footer">
+        Rank by: (1) Total Points · (2) Total Time · Tiebreaker: Faster wins<br>
+        Decipher Academy — Steady the Pace, Week 2
+      </div>
+      <button class="print-btn" onclick="window.print()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Screenshot / Print Result
+      </button>
+      <div class="screenshot-note">Take a screenshot or print and give to your teacher to claim your rank.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- ════════════════════════════════════════
+     WRONG ANSWER OVERLAY — fog animation
+════════════════════════════════════════ -->
+<div class="wrong-ov" id="wrongOv">
+  <!-- Fog SVG background -->
+  <svg class="wrong-fog" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <circle cx="80" cy="80" r="120" fill="rgba(255,77,106,.12)" style="animation:fogFloat 4s ease-in-out infinite alternate"/>
+    <circle cx="320" cy="220" r="100" fill="rgba(177,107,255,.08)" style="animation:fogFloat 4s 1s ease-in-out infinite alternate"/>
+    <circle cx="200" cy="150" r="80" fill="rgba(255,77,106,.06)" style="animation:fogFloat 4s .5s ease-in-out infinite alternate"/>
+  </svg>
+  <style>@keyframes fogFloat{0%{transform:translate(0,0) scale(1)}100%{transform:translate(20px,-15px) scale(1.1)}}</style>
+  <div class="wrong-panel">
+    <div class="wrong-icon-ring">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--err)" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="15" y1="9" x2="9" y2="15"/>
+        <line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+    </div>
+    <div class="wrong-title">The Fog Wins This Round</div>
+    <div class="wrong-msg" id="woMsg">The fog feeds on mistakes. Steady the pace and try again.</div>
+    <div class="wrong-cost" id="woCost">—</div>
+    <div class="wrong-next" id="woNext">—</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SOUND BUTTON
+════════════════════════════════════════ -->
+<div style="position:fixed;bottom:14px;right:14px;z-index:300">
+  <button id="soundBtn" onclick="toggleSound()" style="
+    background:rgba(11,14,26,.92);backdrop-filter:blur(8px);
+    border:1px solid rgba(0,212,180,.2);border-radius:10px;
+    padding:8px 14px;font-size:11px;color:var(--teal);
+    cursor:pointer;display:flex;align-items:center;gap:6px;
+    font-family:'Syne',sans-serif;transition:all .2s;
+    box-shadow:0 2px 12px rgba(0,0,0,.4)">
+    <svg id="sndIco" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    </svg>
+    <span id="sndLbl">Sound ON</span>
+  </button>
+</div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════
+// SESSION GUARD
+// ════════════════════════════════════════════
+(function(){
+  try{
+    const s=sessionStorage.getItem('student');
+    if(!s){window.location.replace('index.html');return;}
+    sessionStorage.removeItem('student');
+    window._student=JSON.parse(s);
+  }catch(e){}
+})();
+const student=window._student||{name:'Explorer',grade:1};
+
+// ════════════════════════════════════════════
+// SCORING — Grade 9 & 10 / Band 5 (exact from document)
+// Start: 10 pts
+// Crossword complete: +2 pts | Skip: −4 pts
+// Each gate: +4 pts | Full 4 gates: +3 bonus
+// Wrong answer: −1 pt + sent back one full checkpoint step
+// Ranking: (1) points desc (2) time asc
+// ════════════════════════════════════════════
+let score       =10;
+const WRONG_PT  =1;    // −1 per wrong, Grade 9 & 10 (Band 5)
+const GATE_PT   =4;    // +4 per gate, Band 5
+const FULL_BONUS=3;    // +3 full bonus, Band 5
+let gatesCleared=0;
+let wrongAttempts=0;
+let currentStep =0;
+let sessionStart=null;
+let activeTimer =null;
+let cwTimerID   =null;
+let g1PickedStep=null;
+let g1SlotData  =[null,null,null,null];
+let g2Sel       =null;
+let g3Sel       =null;
+
+// ════════════════════════════════════════════
+// GAME DATA — exact from document, nothing added
+// ════════════════════════════════════════════
+
+// CROSSWORD: 5×5, words CAT SUN BALL TREE, 90s, skip −3, done +2
+// Doc words: PHOTOSYNTHESIS,HYPOTENUSE,PERSONIFICATION,COLONIALISM,ELECTROLYSIS,METAPHOR,VELOCITY,REPUBLIC
+// Words >9 letters adapted for 9×9: long words replaced with 8-letter science equivalents
+const CW_WORDS=['METAPHOR','VELOCITY','REPUBLIC','SYNTHESIS','EQUATION','COLONIAL','ELECTRON','PARTICLE'];
+const CW_GRID=[
+  ['U','E','Q','U','A','T','I','O','N'],
+  ['H','V','E','L','O','C','I','T','Y'],
+  ['E','L','E','C','T','R','O','N','K'],
+  ['R','O','H','P','A','T','E','M','B'],
+  ['S','I','S','E','H','T','N','Y','S'],
+  ['P','A','R','T','I','C','L','E','O'],
+  ['M','Y','M','P','U','T','O','C','L'],
+  ['L','A','I','N','O','L','O','C','E'],
+  ['C','I','L','B','U','P','E','R','U'],
+];
+// GATE 1: Reconstruct 4-sentence paragraph — causes of WWI — exact from doc
+const G1={
+  tiles:[
+    {step:1,label:'S1',desc:'By 1914, Europe was divided into two rival alliances locked in an arms race.',
+     svg:`<svg viewBox="0 0 60 60" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="10" width="48" height="40" rx="6" fill="rgba(255,123,47,.08)" stroke="var(--gate1)" stroke-width="1.5"/><rect x="10" y="14" width="20" height="32" rx="4" fill="rgba(255,123,47,.18)" stroke="var(--gate1)" stroke-width="1"/><rect x="32" y="14" width="20" height="32" rx="4" fill="rgba(61,184,255,.18)" stroke="var(--gate2)" stroke-width="1"/><line x1="30" y1="14" x2="30" y2="46" stroke="white" stroke-width="1" stroke-dasharray="3,2" opacity=".4"/><text x="20" y="34" text-anchor="middle" fill="var(--gate1)" font-size="8" font-weight="bold" font-family="sans-serif">Allies</text><text x="42" y="34" text-anchor="middle" fill="var(--gate2)" font-size="7" font-weight="bold" font-family="sans-serif">Central</text></svg>`},
+    {step:2,label:'S2',desc:'On 28 June 1914, Archduke Franz Ferdinand of Austria was assassinated in Sarajevo.',
+     svg:`<svg viewBox="0 0 60 60" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="10" width="48" height="40" rx="6" fill="rgba(255,77,106,.08)" stroke="var(--err)" stroke-width="1.5"/><rect x="14" y="16" width="32" height="28" rx="3" fill="none" stroke="var(--err)" stroke-width="1.5"/><line x1="14" y1="23" x2="46" y2="23" stroke="var(--err)" stroke-width="1.5"/><line x1="22" y1="16" x2="22" y2="23" stroke="var(--err)" stroke-width="2"/><line x1="38" y1="16" x2="38" y2="23" stroke="var(--err)" stroke-width="2"/><text x="30" y="37" text-anchor="middle" fill="var(--err)" font-size="9" font-weight="bold" font-family="sans-serif">28 Jun</text><text x="30" y="44" text-anchor="middle" fill="var(--err)" font-size="7" font-family="sans-serif">1914</text></svg>`},
+    {step:3,label:'S3',desc:'Austria-Hungary issued an ultimatum; when Serbia refused, a chain of alliances pulled nations into war.',
+     svg:`<svg viewBox="0 0 60 60" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="10" width="48" height="40" rx="6" fill="rgba(245,158,11,.08)" stroke="var(--warn)" stroke-width="1.5"/><rect x="10" y="24" width="8" height="18" rx="2" fill="var(--warn)" opacity=".8"/><rect x="22" y="20" width="8" height="22" rx="2" fill="var(--warn)" opacity=".7"/><rect x="34" y="16" width="8" height="26" rx="2" fill="var(--warn)" opacity=".6"/><rect x="44" y="12" width="8" height="30" rx="2" fill="var(--warn)" opacity=".5"/><line x1="18" y1="30" x2="22" y2="30" stroke="var(--warn)" stroke-width="1.5" stroke-linecap="round"/><line x1="30" y1="26" x2="34" y2="26" stroke="var(--warn)" stroke-width="1.5" stroke-linecap="round"/><line x1="42" y1="22" x2="44" y2="22" stroke="var(--warn)" stroke-width="1.5" stroke-linecap="round"/></svg>`},
+    {step:4,label:'S4',desc:'The result was the deadliest conflict the world had yet seen, reshaping global politics permanently.',
+     svg:`<svg viewBox="0 0 60 60" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="10" width="48" height="40" rx="6" fill="rgba(34,217,135,.08)" stroke="var(--ok)" stroke-width="1.5"/><circle cx="30" cy="30" r="16" fill="none" stroke="var(--ok)" stroke-width="1.5"/><ellipse cx="30" cy="30" rx="8" ry="16" fill="none" stroke="var(--ok)" stroke-width="1" opacity=".5"/><line x1="14" y1="30" x2="46" y2="30" stroke="var(--ok)" stroke-width="1" opacity=".5"/><circle cx="30" cy="30" r="4" fill="var(--ok)" opacity=".6"/></svg>`}
+  ],
+  answer:[1,2,3,4]
+};
+// GATE 2: Multi-step problem solving — exact from doc, 50s
+const G2={
+  question:'A car travels 90 km in 1.5 hours. What is its speed? If it then slows by 20%, what is the new speed?',
+  choices:['60 km/h then 48 km/h','60 km/h then 50 km/h','45 km/h then 36 km/h','90 km/h then 72 km/h'],
+  answer:'60 km/h then 48 km/h',
+  hint:'Speed = 90 ÷ 1.5 = 60 km/h. 20% of 60 = 12. 60 − 12 = 48 km/h.'
+};
+// GATE 3: 8 periodic table elements shown 12s, recall any 6, 50s
+const G3={
+  items:['H — Hydrogen','He — Helium','Li — Lithium','Be — Beryllium','C — Carbon','N — Nitrogen','O — Oxygen','Na — Sodium'],
+  correctCount:6,
+  allOptions:['H — Hydrogen','He — Helium','Li — Lithium','Be — Beryllium','C — Carbon','N — Nitrogen','O — Oxygen','Na — Sodium','K — Potassium','Ca — Calcium','Fe — Iron','Au — Gold'],
+};
+// GATE 4: Use ELECTROLYSIS correctly in a sentence under 15 words — exact from doc
+const G4={
+  word:'ELECTROLYSIS',
+  definition:'The process of using electricity to split a substance into its chemical components.',
+  maxWords:15
+};
+// ════════════════════════════════════════════
+// STORY INTRO (doc section 1 & 2)
+// Shows once. Skippable after 5 seconds.
+// ════════════════════════════════════════════
+function initStory(){
+  const overlay=document.getElementById('storyOverlay');
+  const skipCd=document.getElementById('skipCountdown');
+  const skipLink=document.getElementById('skipLink');
+  const secsEl=document.getElementById('skipSecs');
+  skipCd.classList.add('show');
+  let sec=5;
+  const cd=setInterval(()=>{
+    sec--;
+    secsEl.textContent=sec;
+    if(sec<=0){
+      clearInterval(cd);
+      skipCd.classList.remove('show');
+      skipLink.style.display='inline';
+    }
+  },1000);
+}
+function startGame(){
+  document.getElementById('storyOverlay').classList.add('hidden');
+  sessionStart=Date.now();
+  initCrossword();
+}
+
+// ════════════════════════════════════════════
+// GATE TIMER — 30 seconds per gate (exact from doc)
+// ════════════════════════════════════════════
+function startTimer(barId,valId,colorClass,totalSecs,onExpire){
+  clearTimer();
+  let secs=totalSecs;
+  const bar=document.getElementById(barId);
+  const val=document.getElementById(valId);
+  bar.className='g-timer-bar '+colorClass;
+  bar.style.width='100%';
+  val.classList.remove('warn');
+  activeTimer=setInterval(()=>{
+    secs-=.1;
+    bar.style.width=Math.max(0,(secs/totalSecs)*100)+'%';
+    const s=Math.max(0,Math.floor(secs));
+    val.textContent='0:'+s.toString().padStart(2,'0');
+    if(secs<=10)val.classList.add('warn');
+    if(secs<=0){clearTimer();onExpire();}
+  },100);
+}
+
+// ════════════════════════════════════════════
+// WRONG ANSWER — sent back one step, −1 pt, fog overlay
+// ════════════════════════════════════════════
+function wrongAnswer(failedGate){
+  clearTimer();
+  sndWrong();
+  haptic(60);
+  markAttempt();
+  score=Math.max(0,score-WRONG_PT);
+  updateScore();
+  const goTo=failedGate;
+  document.getElementById('woMsg').textContent='The fog feeds on mistakes. Steady the pace and try again.';
+  document.getElementById('woCost').textContent='−'+WRONG_PT+' point deducted';
+  document.getElementById('woNext').textContent=
+    goTo===failedGate?'Restarting Gate '+goTo+'...':'Sent back to Gate '+goTo+'...';
+  const ov=document.getElementById('wrongOv');
+  ov.classList.add('show');
+  setTimeout(()=>{ov.classList.remove('show');goToGate(goTo);},2600);
+}
+
+// ════════════════════════════════════════════
+// NAVIGATION — always fresh question on same gate
+// ════════════════════════════════════════════
+function goToGate(n){
+  currentStep=n;
+  updateProgress(n);
+  clearTimer();
+  if(n===1)setupGate1();
+  else if(n===2)setupGate2();
+  else if(n===3)setupGate3();
+  else if(n===4)setupGate4();
+}
+function gateCleared(n){
+  gatesCleared++;
+  score+=GATE_PT;
+  updateScore();
+  sndGate();
+  haptic(40);
+  triggerGateFlash('rgba(0,212,180,.22)');
+  setTimeout(()=>{
+    if(n<4)goToGate(n+1);
+    else finishGame();
+  },1800);
+}
+
+// ════════════════════════════════════════════
+// CROSSWORD — Round 0
+// 9×9, 8 words (METAPHOR etc.), 130s, skip −4, done +2
+// ════════════════════════════════════════════
+let cwFound=[],cwDrag=false,cwCells=[];
+function initCrossword(){
+  updateProgress(0);
+  document.getElementById('phaseLabel').textContent='Round 0 — Crossword Gate';
+  cwFound=[];cwDrag=false;cwCells=[];
+  // Word chips
+  const chips=document.getElementById('wordChips');chips.innerHTML='';
+  CW_WORDS.forEach(w=>{
+    const d=document.createElement('div');
+    d.className='word-chip';d.id='chip_'+w;d.textContent=w;
+    chips.appendChild(d);
+  });
+  // Grid
+  const grid=document.getElementById('cwGrid');grid.innerHTML='';grid.style.touchAction='none';
+  CW_GRID.forEach((row,r)=>row.forEach((lt,c)=>{
+    const el=document.createElement('div');
+    el.className='cell';el.textContent=lt;el.dataset.r=r;el.dataset.c=c;
+    grid.appendChild(el);
+  }));
+  setupCwEvents();
+  // Timer 90s
+  let secs=130;
+  const bar=document.getElementById('cwBar');
+  const val=document.getElementById('cwTime');
+  cwTimerID=setInterval(()=>{
+    secs--;
+    const m=Math.floor(secs/60),s=(secs%60).toString().padStart(2,'0');
+    val.textContent=m+':'+s;
+     bar.style.width=(secs/130*100)+'%';
+    if(secs<=20){
+      bar.style.background='linear-gradient(90deg,#c24a00,var(--err))';
+      val.classList.add('warn');
+    }
+    if(secs<=0){
+      clearInterval(cwTimerID);cwTimerID=null;
+      sndWrong();
+      document.getElementById('skipBtn').style.display='block';
+    }
+  },1000);
+  showSec('sec0');
+}
+
+function setupCwEvents(){
+  const grid=document.getElementById('cwGrid');
+  const start=cell=>{if(!cell||cell.classList.contains('found'))return;cwDrag=true;cwCells=[];addCwCell(cell);};
+  const move=cell=>{if(!cwDrag||!cell||!cell.classList.contains('cell')||cell.classList.contains('found'))return;addCwCell(cell);};
+  const end=()=>{if(cwDrag){cwDrag=false;evalCwWord();}};
+  grid.addEventListener('mousedown',e=>{start(e.target.closest('.cell'));e.preventDefault();});
+  grid.addEventListener('mousemove',e=>move(e.target.closest('.cell')));
+  document.addEventListener('mouseup',end);
+  grid.addEventListener('touchstart',e=>{start(document.elementFromPoint(e.touches[0].clientX,e.touches[0].clientY));e.preventDefault();},{passive:false});
+  grid.addEventListener('touchmove',e=>{move(document.elementFromPoint(e.touches[0].clientX,e.touches[0].clientY));e.preventDefault();},{passive:false});
+  grid.addEventListener('touchend',end);
+}
+function addCwCell(cell){
+  const r=+cell.dataset.r,c=+cell.dataset.c;
+  if(cwCells.some(x=>x.r===r&&x.c===c))return;
+  if(cwCells.length>0){
+    const f=cwCells[0],l=cwCells[cwCells.length-1];
+    if(r!==f.r&&c!==f.c)return;
+    if(cwCells.length>1){
+      const dr=l.r-cwCells[cwCells.length-2].r,dc=l.c-cwCells[cwCells.length-2].c;
+      const nr=r-l.r,nc=c-l.c;
+      if((nr||nc)&&(nr!==dr||nc!==dc))return;
+    }
+  }
+  cwCells.push({r,c,cell});cell.classList.add('selected');
+}
+function evalCwWord(){
+  const word=cwCells.map(x=>CW_GRID[x.r][x.c]).join('');
+  const rev=word.split('').reverse().join('');
+  const match=CW_WORDS.find(w=>w===word||w===rev);
+  if(match&&!cwFound.includes(match)){
+    cwFound.push(match);
+    sndWord();haptic(20);
+    cwCells.forEach(({cell})=>{cell.classList.remove('selected');cell.classList.add('found');});
+    document.getElementById('chip_'+match).classList.add('found');
+    if(cwFound.length===CW_WORDS.length){
+      clearInterval(cwTimerID);cwTimerID=null;
+      score+=2;updateScore(); // +2 full completion bonus
+      triggerGateFlash('rgba(34,217,135,.2)');
+      setTimeout(()=>goToGate(1),800);
+    }
+  }else{
+    cwCells.forEach(({cell})=>cell.classList.remove('selected'));
+  }
+  cwCells=[];
+}
+function skipCrossword(){
+  clearInterval(cwTimerID);cwTimerID=null;
+  score=Math.max(0,score-4);updateScore(); // −4 skip penalty
+  goToGate(1);
+}
+
+let bgAudio=null,audioCtx=null,soundEnabled=true,musicStarted=false;
+
+function initAudio(){
+  try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  if(!bgAudio){
+    bgAudio=new Audio('bgmusic.mp3');
+    bgAudio.loop=true;
+    bgAudio.volume=0.3;
+    bgAudio.onerror=()=>{bgAudio=null;}; // silent fallback if file missing
+  }
+}
+function playBg(){
+  if(!soundEnabled||!bgAudio)return;
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+  bgAudio.play().catch(()=>{});
+}
+function stopBg(){
+  if(!bgAudio)return;
+  bgAudio.pause();
+  bgAudio.currentTime=0;
+}
+function fadeBg(target,dur){
+  if(!bgAudio)return;
+  const start=bgAudio.volume,diff=target-start,steps=20,st=dur/steps;
+  let i=0;
+  const iv=setInterval(()=>{
+    i++;bgAudio.volume=Math.max(0,Math.min(1,start+(diff*i/steps)));
+    if(i>=steps){clearInterval(iv);if(target===0)bgAudio.pause();}
+  },st);
+}
+function tryStartMusic(){
+  if(!musicStarted&&soundEnabled){
+    musicStarted=true;initAudio();playBg();
+  }
+}
+document.addEventListener('click',tryStartMusic,{passive:true});
+document.addEventListener('touchstart',tryStartMusic,{passive:true});
+
+function playTone(f,t,d,v,dl=0){
+  if(!soundEnabled||!audioCtx)return;
+  try{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    o.type=t;o.frequency.value=f;
+    const ts=audioCtx.currentTime+dl;
+    g.gain.setValueAtTime(0,ts);
+    g.gain.linearRampToValueAtTime(v,ts+.01);
+    g.gain.exponentialRampToValueAtTime(.001,ts+d);
+    o.start(ts);o.stop(ts+d);
+  }catch(e){}
+}
+function sndCorrect(){playTone(523,'sine',.1,.28);playTone(659,'sine',.12,.28,.09);playTone(784,'sine',.18,.28,.18);}
+function sndWrong(){playTone(300,'sawtooth',.18,.22);playTone(200,'sawtooth',.2,.18,.12);}
+function sndWord(){[523,659,784,1047].forEach((f,i)=>playTone(f,'sine',.15,.3,i*.07));}
+function sndGate(){[392,494,587,784].forEach((f,i)=>playTone(f,'sine',.2,.3,i*.1));}
+function sndVictory(){[523,659,784,659,784,1047,784,1047,1319].forEach((f,i)=>playTone(f,'sine',.22,.38,i*.1));}
+
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  const btn=document.getElementById('soundBtn');
+  const ico=document.getElementById('sndIco');
+  const lbl=document.getElementById('sndLbl');
+  if(soundEnabled){
+    lbl.textContent='Sound ON';
+    btn.style.borderColor='rgba(0,212,180,.2)';
+    btn.style.color='var(--teal)';
+    ico.innerHTML='<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+    playBg();
+  }else{
+    lbl.textContent='Sound OFF';
+    btn.style.borderColor='rgba(255,255,255,.1)';
+    btn.style.color='var(--muted)';
+    ico.innerHTML='<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+    if(bgAudio)bgAudio.pause();
+  }
+}
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function showSec(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function bumpScore(){
+  const el=document.getElementById('scoreDisplay');
+  el.classList.remove('bump');void el.offsetWidth;
+  el.classList.add('bump');
+}
+function updateScore(){
+  document.getElementById('scoreDisplay').textContent=score+' pts';
+  bumpScore();
+}
+function updateProgress(step){
+  document.getElementById('progFill').style.width=((step/5)*100)+'%';
+  ['stp0','stp1','stp2','stp3','stp4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.remove('done','active');
+    if(i<step)el.classList.add('done');
+    else if(i===step)el.classList.add('active');
+  });
+  ['ln01','ln12','ln23','ln34'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('done',i<step);
+  });
+}
+function markAttempt(){
+  wrongAttempts++;
+  const dot=document.getElementById('ad'+wrongAttempts);
+  if(dot)dot.classList.add('used');
+}
+function clearTimer(){
+  if(activeTimer){clearInterval(activeTimer);clearTimeout(activeTimer);activeTimer=null;}
+}
+function hideFb(n){
+  const el=document.getElementById('fb'+n);
+  el.className='fb';
+}
+function showFb(n,type,title,sub){
+  const el=document.getElementById('fb'+n);
+  el.className='fb show '+type;
+  document.getElementById('fb'+n+'T').textContent=title;
+  document.getElementById('fb'+n+'S').textContent=sub;
+}
+function shuffle(a){
+  const r=[...a];
+  for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}
+  return r;
+}
+function triggerGateFlash(color){
+  const f=document.getElementById('gateFlash');
+  f.style.background=`radial-gradient(circle at center,${color},transparent 70%)`;
+  f.classList.remove('fire','flash');void f.offsetWidth;
+  f.classList.add('flash');
+}
+function spawnConfetti(){
+  const wrap=document.getElementById('confettiLayer');
+  const cols=['#00d4b4','#22d987','#3db8ff','#b16bff','#ff7b2f','#ffd700'];
+  for(let i=0;i<90;i++){
+    const c=document.createElement('div');c.className='cp';
+    const sz=4+Math.random()*10;
+    c.style.cssText=`left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.8+Math.random()*2.8}s;animation-delay:${Math.random()*1.8}s;opacity:${.7+Math.random()*.3}`;
+    wrap.appendChild(c);
+  }
+  setTimeout(()=>wrap.innerHTML='',6000);
+}
+function haptic(ms=30){
+  try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}
+}
+
+// ════════════════════════════════════════════
+// GATE 1 — PUZZLE (Grade 9 & 10)
+// Reconstruct 4-sentence paragraph — Causes of WWI — 50s
+// ════════════════════════════════════════════
+function setupGate1(){
+  document.getElementById('phaseLabel').textContent='Gate 1 — Puzzle';
+  g1SlotData=[null,null,null,null];g1PickedStep=null;
+  hideFb(1);
+  const shuffled=shuffle([...G1.tiles]);
+  const tilesEl=document.getElementById('g1Tiles');tilesEl.innerHTML='';
+  shuffled.forEach(t=>{
+    const el=document.createElement('div');el.className='tile';el.dataset.step=t.step;
+    el.innerHTML=t.svg+'<div style="font-size:10px;color:var(--fog2);line-height:1.4;margin-top:4px">'+t.desc+'</div>';
+    el.onclick=()=>pickTile(el,t.step);
+    tilesEl.appendChild(el);
+  });
+  const slotsEl=document.getElementById('g1Slots');slotsEl.innerHTML='';
+  for(let i=1;i<=4;i++){
+    const wrap=document.createElement('div');wrap.className='slot-wrap';
+    const slot=document.createElement('div');slot.className='slot';slot.id='slot'+i;
+    slot.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    slot.onclick=()=>placeInSlot(i);
+    const lbl=document.createElement('div');lbl.className='slot-lbl';lbl.textContent='Stage '+i;
+    wrap.appendChild(slot);wrap.appendChild(lbl);slotsEl.appendChild(wrap);
+  }
+  document.getElementById('g1Btn').disabled=true;
+  showSec('sec1');
+  startTimer('g1Bar','g1Val','g1c',50,()=>{
+    showFb(1,'err','Time is up!','The fog takes you back...');setTimeout(()=>wrongAnswer(1),1400);
+  });
+}
+function checkGate1(sel){
+  clearTimer();
+  const correct=g1SlotData.every((v,i)=>v===G1.answer[i]);
+  if(correct){
+    showFb(1,'ok','Gate 1 Unlocked!','Correct logical order! Background→Trigger→Escalation→Consequence. +'+GATE_PT+' points!');
+    gateCleared(1);
+  }else{
+    showFb(1,'err','Not quite!','Think about the logical sequence — what happened first, what triggered the war?');
+    setTimeout(()=>wrongAnswer(1),2200);
+  }
+}
+
+// ════════════════════════════════════════════
+// GATE 2 — REASONING (Grade 7&8)
+// Cross-subject analytical: photosynthesis + no sunlight
+// Long-text choices — single column layout — 45s
+// ════════════════════════════════════════════
+function setupGate2(){
+  document.getElementById('phaseLabel').textContent='Gate 2 — Reasoning';
+  g2Sel=null;hideFb(2);
+  const el=document.getElementById('g2Choices');el.innerHTML='';
+  shuffle(G2.choices).forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';btn.textContent=ch;
+    btn.onclick=()=>{
+      document.querySelectorAll('#g2Choices .choice-btn').forEach(b=>{
+        b.classList.remove('sel');b.style.borderColor='rgba(61,184,255,.2)';
+        b.style.color='';b.style.background='';
+      });
+      btn.classList.add('sel');
+      btn.style.borderColor='var(--gate2)';
+      btn.style.background='rgba(61,184,255,.1)';
+      btn.style.color='var(--gate2)';
+      g2Sel=ch;
+      document.getElementById('g2Btn').disabled=false;
+      haptic(15);
+    };
+    el.appendChild(btn);
+  });
+  document.getElementById('g2Btn').disabled=true;
+  showSec('sec2');
+  startTimer('g2Bar','g2Val','g2c',50,()=>{
+    showFb(2,'err','Time is up!','The fog takes you back...');
+    setTimeout(()=>wrongAnswer(2),1400);
+  });
+}
+
+// ════════════════════════════════════════════
+// TILE HELPERS — Gate 1 tile ordering
+// ════════════════════════════════════════════
+function pickTile(el,step){
+  document.querySelectorAll('.tile').forEach(t=>t.classList.remove('picked'));
+  if(g1PickedStep===step){g1PickedStep=null;return;}
+  g1PickedStep=step;el.classList.add('picked');
+}
+function placeInSlot(slotNum){
+  if(g1PickedStep===null)return;
+  const prev=g1SlotData.findIndex(v=>v===g1PickedStep);
+  if(prev!==-1){
+    g1SlotData[prev]=null;
+    const ps=document.getElementById('slot'+(prev+1));
+    ps.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    ps.classList.remove('filled');
+  }
+  g1SlotData[slotNum-1]=g1PickedStep;
+  const tile=G1.tiles.find(t=>t.step===g1PickedStep);
+  const slot=document.getElementById('slot'+slotNum);
+  slot.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'+
+    tile.svg.replace('width="48" height="48"','width="34" height="34"')+
+    '<span style="font-size:10px;color:var(--ok);font-weight:700">'+tile.label+'</span></div>';
+  slot.classList.add('filled');
+  document.querySelectorAll('.tile').forEach(t=>{
+    if(+t.dataset.step===g1PickedStep){t.classList.add('placed');t.classList.remove('picked');}
+  });
+  g1PickedStep=null;
+  document.getElementById('g1Btn').disabled=g1SlotData.some(v=>v===null);
+}
+
+function checkGate2(){
+  clearTimer();
+  if(g2Sel===G2.answer){
+    showFb(2,'ok','Correct!',G2.hint+' +'+GATE_PT+' points!');
+    gateCleared(2);
+  }else{
+    showFb(2,'err','Not quite!','Speed = Distance ÷ Time. Then find 20% of that and subtract.');
+    setTimeout(()=>wrongAnswer(2),2200);
+  }
+}
+
+// ════════════════════════════════════════════
+// GATE 3 — MEMORY (Grade 9 & 10)
+// 8 periodic table elements shown 12s → items hidden → recall any 6
+// Visible countdown timer during display phase (doc requirement)
+// 50s recall timer
+// ════════════════════════════════════════════
+function setupGate3(){
+  document.getElementById('phaseLabel').textContent='Gate 3 — Memory';
+  hideFb(3);
+  document.getElementById('g3Show').style.display='block';
+  document.getElementById('g3Recall').style.display='none';
+  document.getElementById('g3Btn').disabled=true;
+  // Show ALL 5 countries
+  const itemsEl=document.getElementById('g3Items');itemsEl.innerHTML='';
+  G3.items.forEach(item=>{
+    const d=document.createElement('div');d.className='mem-item';
+    d.style.fontSize='clamp(14px,3.8vw,18px)';
+    d.textContent=item;itemsEl.appendChild(d);
+  });
+  let cd=12; // 12 seconds for Grade 9&10
+  const cdEl=document.getElementById('g3Count');cdEl.textContent=cd;
+  cdEl.classList.remove('pulse');
+  showSec('sec3');
+  const cdiv=setInterval(()=>{
+    cd--;
+    cdEl.textContent=Math.max(0,cd);
+    cdEl.classList.remove('pulse');void cdEl.offsetWidth;cdEl.classList.add('pulse');
+    if(cd<=0){
+      clearInterval(cdiv);
+      document.getElementById('g3Show').style.display='none';
+      document.getElementById('g3Recall').style.display='block';
+      // Multi-select: player picks any 4 from 8 options
+      const optsEl=document.getElementById('g3Opts');optsEl.innerHTML='';
+      let selected=new Set();
+      shuffle(G3.allOptions).forEach(opt=>{
+        const btn=document.createElement('button');
+        btn.className='mem-opt';btn.textContent=opt;
+        btn.onclick=()=>{
+          if(selected.has(opt)){
+            selected.delete(opt);btn.classList.remove('sel');
+          }else if(selected.size<6){
+            selected.add(opt);btn.classList.add('sel');
+            haptic(15);
+          }
+          document.getElementById('g3Btn').disabled=selected.size!==6;
+          document.getElementById('g3Btn').dataset.sel=JSON.stringify([...selected]);
+        };
+        optsEl.appendChild(btn);
+      });
+      document.getElementById('g3Btn').dataset.sel='[]';
+      startTimer('g3Bar','g3Val','g3c',50,()=>{
+        showFb(3,'err','Time is up!','The fog takes you back...');
+        setTimeout(()=>wrongAnswer(3),1400);
+      });
+    }
+  },1000);
+}
+function checkGate3(){
+  clearTimer();
+  const sel=JSON.parse(document.getElementById('g3Btn').dataset.sel||'[]');
+  // Any 4 correct = must all be from G3.items
+  const correct=sel.length===6&&sel.every(s=>G3.items.includes(s));
+  if(correct){
+    showFb(3,'ok','You remembered them!','Excellent periodic table recall. +'+GATE_PT+' points!');
+    gateCleared(3);
+  }else{
+    showFb(3,'err','Not quite!','Only elements from the list count — steady your memory.');
+    setTimeout(()=>wrongAnswer(3),2200);
+  }
+}
+
+// ════════════════════════════════════════════
+// GATE 4 — WORD CHALLENGE
+// Unscramble NAC → CAN, 30s
+// ════════════════════════════════════════════
+function setupGate4(){
+  document.getElementById('phaseLabel').textContent='Gate 4 — Word Challenge';
+  hideFb(4);
+  const inp=document.getElementById('g4Input');
+  inp.value='';inp.style.borderColor='rgba(0,212,180,.15)';
+  document.getElementById('g4WordCount').textContent='0 / 15 words';
+  document.getElementById('g4Btn').disabled=true;
+  showSec('sec4');
+  setTimeout(()=>inp.focus(),350);
+  startTimer('g4Bar','g4Val','g4c',50,()=>{
+    showFb(4,'err','Time is up!','The fog takes you back...');
+    setTimeout(()=>wrongAnswer(4),1800);
+  });
+}
+function g4WordCheck(el){
+  const words=el.value.trim().split(/\s+/).filter(w=>w.length>0);
+  const wc=words.length;
+  document.getElementById('g4WordCount').textContent=wc+' / 15 words';
+  const hasWord=el.value.toUpperCase().includes('ELECTROLYSIS');
+  document.getElementById('g4Btn').disabled=!(hasWord&&wc>=3&&wc<=15);
+  el.style.borderColor=wc>15?'var(--err)':hasWord?'var(--ok)':'rgba(0,212,180,.15)';
+}
+
+function checkGate4(){
+  clearTimer();
+  const val=document.getElementById('g4Input').value.trim();
+  const words=val.split(/\s+/).filter(w=>w.length>0);
+  const hasWord=val.toUpperCase().includes('ELECTROLYSIS');
+  if(hasWord&&words.length>=3&&words.length<=15){
+    document.getElementById('g4Input').style.borderColor='var(--ok)';
+    showFb(4,'ok','The Archive Opens!','ELECTROLYSIS correctly used in your sentence! +'+GATE_PT+' points!');
+    gateCleared(4);
+  }else if(!hasWord){
+    document.getElementById('g4Input').style.borderColor='var(--err)';
+    showFb(4,'err','Not quite!','Your sentence must include the word ELECTROLYSIS.');
+    setTimeout(()=>wrongAnswer(4),2200);
+  }else{
+    document.getElementById('g4Input').style.borderColor='var(--err)';
+    showFb(4,'err','Too long!','Your sentence must be 15 words or fewer.');
+    setTimeout(()=>wrongAnswer(4),2200);
+  }
+}
+// ════════════════════════════════════════════
+// FINISH GAME
+// Dramatic leaderboard reveal: score → entry → card
+// Ranking: (1) points desc (2) time asc — doc section 5
+// ════════════════════════════════════════════
+function finishGame(){
+  clearTimer();
+  if(cwTimerID){clearInterval(cwTimerID);cwTimerID=null;}
+  if(gatesCleared===4){score+=FULL_BONUS;} // +2 full bonus
+  fadeBg(0,2000);
+  updateProgress(5);
+  document.getElementById('progFill').style.width='100%';
+  document.getElementById('phaseLabel').textContent='The Archive is Open!';
+  const elapsed=sessionStart?Math.round((Date.now()-sessionStart)/1000):0;
+  const mins=Math.floor(elapsed/60),secs=(elapsed%60).toString().padStart(2,'0');
+  const timeStr=mins+':'+secs;
+  showSec('sec5');
+
+  // Step 1: confetti + victory sound
+  setTimeout(()=>{sndVictory();spawnConfetti();haptic([100,50,100]);},200);
+
+  // Step 2: dramatic score reveal (lowest to highest feel — big number animates in)
+  setTimeout(()=>{
+    const rev=document.getElementById('scoreReveal');
+    rev.textContent=score+' pts';
+    rev.classList.add('show');
+    // Animate score counting up
+    let displayed=0;
+    const target=score;
+    const step=Math.ceil(target/30);
+    const iv=setInterval(()=>{
+      displayed=Math.min(displayed+step,target);
+      rev.textContent=displayed+' pts';
+      if(displayed>=target)clearInterval(iv);
+    },50);
+  },600);
+
+  // Step 3: leaderboard entry slides in (doc: dramatic reveal)
+  setTimeout(()=>{
+    const lbEl=document.getElementById('lbEntries');lbEl.innerHTML='';
+    const entry=document.createElement('div');
+    entry.className='lb-entry rank1';
+    entry.innerHTML=
+      '<div class="lb-rank">1</div>'+
+      '<div style="flex:1">'+
+        '<div class="lb-name">'+student.name+'</div>'+
+        '<div class="lb-meta">Grade 9 &amp; 10 &nbsp;·&nbsp; '+gatesCleared+'/4 Gates &nbsp;·&nbsp; '+timeStr+'</div>'+
+      '</div>'+
+      '<div class="lb-score">'+score+' pts</div>';
+    lbEl.appendChild(entry);
+    // Small delay then slide in
+    requestAnimationFrame(()=>requestAnimationFrame(()=>entry.classList.add('show')));
+  },1600);
+
+  // Step 4: result card (printable) slides in
+  setTimeout(()=>{
+    document.getElementById('rcName').textContent=student.name;
+    document.getElementById('rcScoreBig').textContent=score+' pts';
+    document.getElementById('rcScore').textContent=score+' pts';
+    document.getElementById('rcGates').textContent=gatesCleared+' / 4';
+    document.getElementById('rcTime').textContent=timeStr;
+    document.getElementById('rcAttempts').textContent=wrongAttempts;
+    document.getElementById('rcDate').textContent=
+      new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    document.getElementById('resultCard').classList.add('show');
+    updateScore(); // final score update
+  },2400);
+}
+
+// ════════════════════════════════════════════
+// KEYBOARD — Enter to submit Gate 4
+// ════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.activeElement===document.getElementById('g4Input')){
+    e.preventDefault();checkGate4();
+  }
+});
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  updateScore();
+  initStory(); // show story intro first (doc section 1)
+});
+</script>
+</body>
+</html>
